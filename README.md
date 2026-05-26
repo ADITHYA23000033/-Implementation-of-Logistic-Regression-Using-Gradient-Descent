@@ -8,97 +8,70 @@ To write a program to implement the the Logistic Regression Using Gradient Desce
 2. Anaconda – Python 3.7 Installation / Jupyter notebook
 
 ## Algorithm
-1. Import the required libraries.
-2.Load the dataset.
-3.Define X and Y array.
-4.Define a function for costFunction,cost and gradient.
-5.Define a function to plot the decision boundary. 6.Define a function to predict the Regression value.
+1. Import the required libraries, load the dataset, remove unnecessary columns, and convert categorical data into numerical values.
+2. Separate the dataset into input features (X) and target values (y), initialize theta values, and define the sigmoid function.
+3. Train the Logistic Regression model using Gradient Descent by calculating predictions, computing gradients, and updating theta values iteratively.
+4. Predict the output using the trained model, calculate the accuracy, and test the model with new student data samples.
 
 ## Program:
 ```
+/*
 Program to implement the the Logistic Regression Using Gradient Descent.
 Developed by: ADITHYA V
 RegisterNumber:  212223110001
-
+*/
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
-from scipy import optimize
-
-# Load the data using pandas
-data = pd.read_csv("/content/Mall_Customers.csv")
-
-# Extract features (Age and Annual Income) and labels (Gender)
-X = data[['Age', 'Annual Income (k$)']].values
-y = data['Gender'].apply(lambda x: 1 if x == 'Female' else 0).values
-
-# Define sigmoid function
+data = pd.read_csv('Placement_Data (1).csv')
+data = data.drop('sl_no', axis=1)
+data = data.drop('salary', axis=1)
+cat_cols = ["gender", "ssc_b", "hsc_b", "degree_t", "workex", "specialisation", "status", "hsc_s"]
+for col in cat_cols:
+    data[col] = data[col].astype('category')
+for col in cat_cols:
+    data[col] = data[col].cat.codes
+x = data.iloc[:, :-1].values
+y = data.iloc[:, -1].values
+theta = np.random.randn(x.shape[1])
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
+def loss(theta, X, y):
+    h = sigmoid(X.dot(theta))
+    return -np.sum(y * np.log(h) + (1 - y) * np.log(1 - h))
+def gradient_descent(theta, X, y, alpha, num_iterations):
+    m = len(y)
+    for i in range(num_iterations):
+        h = sigmoid(X.dot(theta))
+        gradient = X.T.dot(h - y) / m
+        theta -= alpha * gradient
+    return theta
 
-# Define cost function and gradient
-def costFunction(theta, X, y):
-    h = sigmoid(np.dot(X, theta))
-    J = -(np.dot(y, np.log(h)) + np.dot(1 - y, np.log(1 - h))) / X.shape[0]
-    grad = np.dot(X.T, h - y) / X.shape[0]
-    return J, grad
+theta = gradient_descent(theta, x, y, alpha=0.01, num_iterations=1000)
 
-# Define prediction function
 def predict(theta, X):
-    prob = sigmoid(np.dot(X, theta))
-    return (prob >= 0.5).astype(int)
+    h = sigmoid(X.dot(theta))
+    y_pred = np.where(h >= 0.5, 1, 0)
+    return y_pred
 
-# Add intercept term to X
-X_train = np.hstack((np.ones((X.shape[0], 1)), X))
+y_pred = predict(theta, x)
+accuracy = np.mean(y_pred.flatten() == y)
+print("Accuracy: ", accuracy)
 
-# Initialize parameters
-theta = np.zeros(X_train.shape[1])
+xnew1 = np.array([[0, 87, 0, 95, 0, 2, 78, 2, 0, 0, 1, 0]])
+y_prednew1 = predict(theta, xnew1)
+print("Prediction for Student 1:", y_prednew1)
 
-# Calculate cost and gradient for initial parameters
-J, grad = costFunction(theta, X_train, y)
-print("Initial Cost:", J)
-print("Initial Gradient:", grad)
-
-# Optimize parameters using minimize function
-res = optimize.minimize(fun=costFunction, x0=theta, args=(X_train, y), method='Newton-CG', jac=True)
-optimal_theta = res.x
-
-# Predict and calculate accuracy
-accuracy = np.mean(predict(optimal_theta, X_train) == y)
-print("Accuracy:", accuracy)
-
-# Plot decision boundary
-def plotDecisionBoundary(theta, X, y):
-    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
-    xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
-    X_plot = np.c_[xx.ravel(), yy.ravel()]
-    X_plot = np.hstack((np.ones((X_plot.shape[0], 1)), X_plot))
-    y_plot = np.dot(X_plot, theta).reshape(xx.shape)
-
-    plt.figure()
-    plt.scatter(X[y == 1][:, 0], X[y == 1][:, 1], label="Female")
-    plt.scatter(X[y == 0][:, 0], X[y == 0][:, 1], label="Male")
-    plt.contour(xx, yy, y_plot, levels=[0.5])
-    plt.xlabel("Age")
-    plt.ylabel("Annual Income (k$)")
-    plt.legend()
-    plt.show()
-
-plotDecisionBoundary(optimal_theta, X, y)
-def predict(theta,x):
-  x_train = np.hstack((np.ones((x.shape[0],1)),x))
-  prob = sigmoid(np.dot(x_train,theta))
-  return (prob >=0.5).astype(int)
-
-
-print('Prediction value of mean:')
-np.mean(predict(res.x,X)==y)
+xnew2 = np.array([[0, 0, 0, 0, 0, 2, 8, 2, 0, 0, 1, 0]])
+y_prednew2 = predict(theta, xnew2)
+print("Prediction for Student 2:", y_prednew2)
 ```
+
 ## Output:
-  
-![WhatsApp Image 2024-04-23 at 09 06 25_06056cb8](https://github.com/Kamal-Raj-A/-Implementation-of-Logistic-Regression-Using-Gradient-Descent/assets/145742556/1dbce100-7063-4d79-bfd6-3bb43e1039db)
+<img width="336" height="82" alt="image" src="https://github.com/user-attachments/assets/1ee3b60d-f899-41d1-a068-75317545b842" />
+
 
 
 ## Result:
 Thus the program to implement the the Logistic Regression Using Gradient Descent is written and verified using python programming.
+
